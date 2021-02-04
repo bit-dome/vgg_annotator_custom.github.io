@@ -4832,7 +4832,7 @@ function _via_window_keydown_handler(e) {
 function _via_handle_global_keydown_event(e) {
   // zoom
   if (_via_current_image_loaded) {
-    if ( e.key === "+") {
+    if ( e.key === "q") {
       zoom_in();
       return;
     }
@@ -4842,7 +4842,7 @@ function _via_handle_global_keydown_event(e) {
       return;
     }
 
-    if ( e.key === "-") {
+    if ( e.key === "w") {
       zoom_out();
       return;
     }
