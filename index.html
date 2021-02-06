@@ -3180,7 +3180,7 @@ function _via_reg_canvas_mouseup_handler(e) {
     var region_dy = Math.abs(region_y1 - region_y0);
     var new_region_added = false;
 
-    if ( region_dx > VIA_REGION_MIN_DIM && region_dy > VIA_REGION_MIN_DIM ) { // avoid regions with 0 dim
+    if ( true ) { 
       switch(_via_current_shape) {
       case VIA_REGION_SHAPE.RECT:
         // ensure that (x0,y0) is top-left and (x1,y1) is bottom-right
