@@ -3052,7 +3052,7 @@ function _via_reg_canvas_mouseup_handler(e) {
   }
 
   // denotes a single click (= mouse down + mouse up)
-  if ( click_dx < VIA_MOUSE_CLICK_TOL ||
+  if ( click_dx < VIA_MOUSE_CLICK_TOL &&
        click_dy < VIA_MOUSE_CLICK_TOL ) {
     // if user is already drawing polygon, then each click adds a new point
     if ( _via_is_user_drawing_polygon ) {
