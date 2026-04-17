@@ -3200,6 +3200,28 @@ function _via_reg_canvas_mouseup_handler(e) {
     case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
     case VIA_REGION_SHAPE.POLYGON:
       var moved_vertex_id = _via_region_edge[1] - VIA_POLYGON_RESIZE_VERTEX_OFFSET;
+      var is_polygon_vertex_click = is_on_polygon_vertex(canvas_attr['all_points_x'],
+                                                         canvas_attr['all_points_y'],
+                                                         _via_click_x1,
+                                                         _via_click_y1);
+      var is_polygon_edge_click = is_on_polygon_edge(canvas_attr['all_points_x'],
+                                                     canvas_attr['all_points_y'],
+                                                     _via_click_x1,
+                                                     _via_click_y1);
+
+      if ( click_dx < click_tol &&
+           click_dy < click_tol &&
+           is_polygon_vertex_click === 0 &&
+           is_polygon_edge_click === _via_region_edge[1] ) {
+        if ( _via_polygon_add_vertex(region_id,
+                                     moved_vertex_id,
+                                     Math.round(_via_click_x1),
+                                     Math.round(_via_click_y1)) ) {
+          _via_redraw_reg_canvas();
+          _via_reg_canvas.focus();
+          return;
+        }
+      }
 
       if ( e.ctrlKey ) {
         // if on vertex, delete it
@@ -3217,20 +3239,10 @@ function _via_reg_canvas_mouseup_handler(e) {
           var is_on_edge = is_on_polygon_edge(r['all_points_x'], r['all_points_y'], _via_current_x, _via_current_y);
           if ( is_on_edge === _via_region_edge[1] ) {
             // click on edge, hence add new vertex
-            var vertex_index = is_on_edge - VIA_POLYGON_RESIZE_VERTEX_OFFSET;
-            var canvas_x0 = Math.round(_via_click_x1);
-            var canvas_y0 = Math.round(_via_click_y1);
-            var img_x0 = Math.round( canvas_x0 * _via_canvas_scale );
-            var img_y0 = Math.round( canvas_y0 * _via_canvas_scale );
-            canvas_x0 = Math.round( img_x0 / _via_canvas_scale );
-            canvas_y0 = Math.round( img_y0 / _via_canvas_scale );
-
-            _via_canvas_regions[region_id].shape_attributes['all_points_x'].splice(vertex_index+1, 0, canvas_x0);
-            _via_canvas_regions[region_id].shape_attributes['all_points_y'].splice(vertex_index+1, 0, canvas_y0);
-            _via_img_metadata[_via_image_id].regions[region_id].shape_attributes['all_points_x'].splice(vertex_index+1, 0, img_x0);
-            _via_img_metadata[_via_image_id].regions[region_id].shape_attributes['all_points_y'].splice(vertex_index+1, 0, img_y0);
-
-            show_message('Added 1 new vertex to ' + shape + ' region');
+            _via_polygon_add_vertex(region_id,
+                                    is_on_edge - VIA_POLYGON_RESIZE_VERTEX_OFFSET,
+                                    Math.round(_via_click_x1),
+                                    Math.round(_via_click_y1));
           }
         }
       } else {
@@ -3640,7 +3652,7 @@ function _via_reg_canvas_mousemove_handler(e) {
         if (_via_region_edge[1] >= VIA_POLYGON_RESIZE_VERTEX_OFFSET) {
           // indicates mouse over polygon vertex
           _via_reg_canvas.style.cursor = "crosshair";
-          show_message('To move vertex, simply drag the vertex. To add vertex, press [Ctrl] key and click on the edge. To delete vertex, press [Ctrl] key and click on vertex.');
+          show_message('To move vertex, simply drag the vertex. To add vertex, click on the edge. To delete vertex, press [Ctrl] key and click on vertex.');
         }
       } else {
         var yes = is_inside_this_region(_via_current_x,
@@ -4084,6 +4096,27 @@ function _via_polygon_del_vertex(region_id, vertex_id) {
   // delete vertex from image metadata
   _via_img_metadata[_via_image_id].regions[region_id].shape_attributes['all_points_x'].splice(vertex_id, 1);
   _via_img_metadata[_via_image_id].regions[region_id].shape_attributes['all_points_y'].splice(vertex_id, 1);
+  return true;
+}
+
+function _via_polygon_add_vertex(region_id, edge_index, canvas_x0, canvas_y0) {
+  var shape = _via_canvas_regions[region_id].shape_attributes['name'];
+  if ( shape !== VIA_REGION_SHAPE.POLYGON && shape !== VIA_REGION_SHAPE.POLYLINE ) {
+    show_message('Vertices can only be added to polygon/polyline.');
+    return false;
+  }
+
+  var img_x0 = Math.round( canvas_x0 * _via_canvas_scale );
+  var img_y0 = Math.round( canvas_y0 * _via_canvas_scale );
+  canvas_x0 = Math.round( img_x0 / _via_canvas_scale );
+  canvas_y0 = Math.round( img_y0 / _via_canvas_scale );
+
+  _via_canvas_regions[region_id].shape_attributes['all_points_x'].splice(edge_index + 1, 0, canvas_x0);
+  _via_canvas_regions[region_id].shape_attributes['all_points_y'].splice(edge_index + 1, 0, canvas_y0);
+  _via_img_metadata[_via_image_id].regions[region_id].shape_attributes['all_points_x'].splice(edge_index + 1, 0, img_x0);
+  _via_img_metadata[_via_image_id].regions[region_id].shape_attributes['all_points_y'].splice(edge_index + 1, 0, img_y0);
+
+  show_message('Added 1 new vertex to ' + shape + ' region');
   return true;
 }
 
