@@ -540,13 +540,13 @@ ul.region_shape li.region_tool_button.selected { background-color:#e6e6e6; fill:
         <button class="leftsidebar_accordion active">Region Shape</button>
         <div class="leftsidebar_accordion_panel show">
           <ul class="region_shape">
-            <li id="region_tool_select" class="region_tool_button" onclick="select_region_tool('select')" title="Select object (Shortcut key s)">Select</li>
-            <li id="region_shape_rect" class="selected" onclick="select_region_shape('rect')" title="Rectangle (Shortcut key 1)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_rectangle"></use></svg></li>
-            <li id="region_shape_circle" onclick="select_region_shape('circle')" title="Circle (Shortcut key 2)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_circle"></use></svg></li>
-            <li id="region_shape_ellipse" onclick="select_region_shape('ellipse')" title="Ellipse (Shortcut key 3)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_ellipse"></use></svg></li>
-            <li id="region_shape_polygon" onclick="select_region_shape('polygon')" title="Polygon (Shortcut key 4)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polygon"></use></svg></li>
-            <li id="region_shape_point" onclick="select_region_shape('point')" title="Point (Shortcut key 5)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_point"></use></svg></li>
-            <li id="region_shape_polyline" onclick="select_region_shape('polyline')" title="Polyline (Shortcut key 6)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polyline"></use></svg></li>
+            <li id="region_tool_select" class="region_tool_button" onclick="select_region_tool('select')" title="Select object (Shortcut key 1)">Select</li>
+            <li id="region_shape_rect" class="selected" onclick="select_region_shape('rect')" title="Rectangle (Shortcut key 2)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_rectangle"></use></svg></li>
+            <li id="region_shape_circle" onclick="select_region_shape('circle')" title="Circle (Shortcut key 3)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_circle"></use></svg></li>
+            <li id="region_shape_ellipse" onclick="select_region_shape('ellipse')" title="Ellipse (Shortcut key 4)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_ellipse"></use></svg></li>
+            <li id="region_shape_polygon" onclick="select_region_shape('polygon')" title="Polygon (Shortcut key 5)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polygon"></use></svg></li>
+            <li id="region_shape_point" onclick="select_region_shape('point')" title="Point"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_point"></use></svg></li>
+            <li id="region_shape_polyline" onclick="select_region_shape('polyline')" title="Polyline"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polyline"></use></svg></li>
           </ul>
           <div id="region_info" class="display_none">&nbsp;</div>
         </div>
@@ -5291,6 +5291,29 @@ function _via_reg_canvas_keyup_handler(e) {
 function _via_reg_canvas_keydown_handler(e) {
   if ( e.key === 'Control' ) {
     _via_is_ctrl_pressed = true;
+  }
+
+  switch ( e.key ) {
+  case '1':
+    select_region_tool(VIA_REGION_TOOL.SELECT);
+    e.preventDefault();
+    return;
+  case '2':
+    select_region_shape(VIA_REGION_SHAPE.RECT);
+    e.preventDefault();
+    return;
+  case '3':
+    select_region_shape(VIA_REGION_SHAPE.CIRCLE);
+    e.preventDefault();
+    return;
+  case '4':
+    select_region_shape(VIA_REGION_SHAPE.ELLIPSE);
+    e.preventDefault();
+    return;
+  case '5':
+    select_region_shape(VIA_REGION_SHAPE.POLYGON);
+    e.preventDefault();
+    return;
   }
 
   if (_via_current_image_loaded) {
