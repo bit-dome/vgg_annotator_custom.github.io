@@ -617,7 +617,9 @@ function _via_reg_canvas_mouseup_handler(e) {
         // if on edge, add a new vertex
         var r = _via_canvas_regions[_via_user_sel_region_id].shape_attributes;
         var shape = r.name;
-        var is_on_vertex = is_on_polygon_vertex(r['all_points_x'], r['all_points_y'], _via_current_x, _via_current_y);
+        var click_x = Math.round(_via_click_x1);
+        var click_y = Math.round(_via_click_y1);
+        var is_on_vertex = is_on_polygon_vertex(r['all_points_x'], r['all_points_y'], click_x, click_y);
 
         if ( is_on_vertex === _via_region_edge[1] ) {
           // click on vertex, hence delete vertex
@@ -625,12 +627,12 @@ function _via_reg_canvas_mouseup_handler(e) {
             show_message('Deleted vertex ' + moved_vertex_id + ' from region');
           }
         } else {
-          var is_on_edge = is_on_polygon_edge(r['all_points_x'], r['all_points_y'], _via_current_x, _via_current_y);
+          var is_on_edge = is_on_polygon_edge(r['all_points_x'], r['all_points_y'], click_x, click_y);
           if ( is_on_edge === _via_region_edge[1] ) {
             // click on edge, hence add new vertex
             var vertex_index = is_on_edge - VIA_POLYGON_RESIZE_VERTEX_OFFSET;
-            var canvas_x0 = Math.round(_via_click_x1);
-            var canvas_y0 = Math.round(_via_click_y1);
+            var canvas_x0 = click_x;
+            var canvas_y0 = click_y;
             var img_x0 = Math.round( canvas_x0 * _via_canvas_scale );
             var img_y0 = Math.round( canvas_y0 * _via_canvas_scale );
             canvas_x0 = Math.round( img_x0 / _via_canvas_scale );
