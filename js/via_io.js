@@ -153,7 +153,7 @@ function _via_reg_canvas_keydown_handler(e) {
   }
 
   if (_via_current_image_loaded) {
-    if ( e.key === 'Enter' ) {
+    if ( e.key === 'Enter' || e.key === 'f' ) {
         if ( _via_current_shape === VIA_REGION_SHAPE.POLYLINE ||
              _via_current_shape === VIA_REGION_SHAPE.POLYGON) {
           _via_polyshape_finish_drawing();

@@ -2885,15 +2885,10 @@ function project_import_settings(s) {
 function project_file_remove_with_confirm() {
   var img_id = _via_image_id_list[_via_image_index];
   var filename = _via_img_metadata[img_id].filename;
-  var region_count = _via_img_metadata[img_id].regions.length;
-
-  var config = {'title':'Remove File from Project' };
-  var input = { 'img_index': { type:'text', name:'File Id', value:(_via_image_index+1), disabled:true, size:8 },
-                'filename':{ type:'text', name:'Filename', value:filename, disabled:true, size:30},
-                'region_count':{ type:'text', name:'Number of regions', disabled:true, value:region_count, size:8}
-              };
-
-  invoke_with_user_inputs(project_file_remove_confirmed, input, config);
+    project_file_remove_confirmed({
+      'img_index': { value:(_via_image_index + 1) },
+      'filename': { value:filename }
+    });
 }
 
 function project_file_remove_confirmed(input) {
