@@ -187,8 +187,8 @@ button.leftsidebar_accordion.active:after { content: '\2796'; }
 #user_input_panel .content .warning { color:red; }
 
 /* Attribute editor */
-#annotation_editor_panel { position:fixed; display:none; width:100%; left:0; bottom:0; background-color:white; border-top:2px solid #cccccc; padding:0.2em 1em; overflow:auto; z-index:1001; box-shadow: 0 0 1em #cccccc;}
-#annotation_editor { display:table; margin-bottom:3em; border-collapse:collapse; font-size:inherit; position: absolute; background-color:white; }
+#annotation_editor_panel { position:fixed; display:none; width:25%; right:0; top:0; height:100%; background-color:white; border-left:2px solid #cccccc; padding:0.2em 1em; overflow-y:auto; z-index:1001; box-shadow: 0 0 1em #cccccc;}
+#annotation_editor { display:table; width:100%; margin-bottom:1em; border-collapse:collapse; font-size:inherit; background-color:white; }
 #annotation_editor .row { display:table-row; }
 #annotation_editor .highlight .col { background-color:#e6e6e6;}
 
@@ -412,8 +412,8 @@ ul.region_shape .selected { fill:#ffffff; stroke:#ff0000; }
         <span class="text_button" onclick="edit_file_metadata_in_annotation_editor()" id="button_edit_file_metadata" title="Manual annotations of a file">File Annotations</span>
 
         <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_toggle_all_regions_editor()" title="Close this window of annotation editor">&times;</span>
-        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_increase_panel_height()" title="Increase the height of this panel">&uarr;</span>
-        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_decrease_panel_height()" title="Decrease the height of this panel">&darr;</span>
+        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_increase_panel_height()" title="Increase the width of this panel">&rarr;</span>
+        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_decrease_panel_height()" title="Decrease the width of this panel">&larr;</span>
         <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_increase_content_size()" title="Increase size of contents in annotation editor">&plus;</span>
         <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_decrease_content_size()" title="Decrease size of contents in annotation editor">&minus;</span>
       </div>
@@ -603,98 +603,7 @@ ul.region_shape .selected { fill:#ffffff; stroke:#ff0000; }
           </div>
         </div>
 
-        <button class="leftsidebar_accordion">Keyboard Shortcuts</button>
-        <div class="leftsidebar_accordion_panel">
-          <div style="display:block; text-align:center; padding:1rem;">Available only on image focus</div>
-          <table>
-            <tr>
-              <td style="width:8em;"><span class="key">&larr;</span>&nbsp;<span class="key">&uarr;</span>&nbsp;<span class="key">&rarr;</span>&nbsp;<span class="key">&darr;</span></td>
-              <td>Move selected region by 1 px (Shift to jump)</td>
-            </tr>
-            <tr>
-              <td><span class="key">a</span></td>
-              <td>Select all regions</td>
-            </tr>
-
-            <tr>
-              <td><span class="key">c</span></td>
-              <td>Copy selected regions</td>
-            </tr>
-            <tr>
-              <td><span class="key">v</span></td>
-              <td>Paste selected regions</td>
-            </tr>
-            <tr>
-              <td><span class="key">d</span></td>
-              <td>Delete selected regions</td>
-            </tr>
-            <tr>
-              <td><span class="key">Ctrl</span> + Wheel</td>
-              <td>Zoom in/out (mouse cursor is over image)</td>
-            </tr>
-            <tr>
-              <td><span class="key">l</span></td>
-              <td>Toggle region label</td>
-            </tr>
-            <tr>
-              <td><span class="key">b</span></td>
-              <td>Toggle region boundary</td>
-            </tr>
-            <tr>
-              <td><span class="key">Enter</span></td>
-              <td>Finish drawing polyshape</td>
-            </tr>
-            <tr>
-              <td><span class="key">Backspace</span></td>
-              <td>Delete last polyshape vertex</td>
-            </tr>
-          </table>
-
-          <div style="display:block; text-align:center; padding:1rem;">Always Available</div>
-          <table>
-            <tr>
-              <td style="width:8em;"><span class="key">&larr;</span>&nbsp;<span class="key">&rarr;</span></td>
-              <td>Move to next/previous image</td>
-            </tr>
-            <tr>
-              <td><span class="key">+</span>&nbsp;<span class="key">-</span>&nbsp;<span class="key">=</span></td>
-              <td>Zoom in/out/reset</td>
-            </tr>
-            <tr>
-              <td><span class="key">&uarr;</span></td>
-              <td>Update region label</td>
-            </tr>
-            <tr>
-              <td><span class="key">&darr;</span></td>
-              <td>Update region colour</td>
-            </tr>
-            <tr>
-              <td><span class="key">Spacebar</span></td>
-              <td>Toggle annotation editor (Ctrl to toggle on image editor)</td>
-            </tr>
-            <tr>
-              <td><span class="key">Home</span> / <span class="key">h</span></td>
-              <td>Jump to first image</td>
-            </tr>
-            <tr>
-              <td><span class="key">End</span> / <span class="key">e</span></td>
-              <td>Jump to last image</td>
-            </tr>
-            <tr>
-              <td><span class="key">PgUp</span> / <span class="key">u</span></td>
-              <td>Jump several images</td>
-            </tr>
-            <tr>
-              <td><span class="key">PgDown</span> / <span class="key">d</span></td>
-              <td>Jump several images</td>
-            </tr>
-
-            <tr>
-              <td><span class="key">Esc</span></td>
-              <td>Cancel ongoing task</td>
-            </tr>
-          </table>
-        </div>
+    
 
       </div> <!-- end of leftsidebar -->
 

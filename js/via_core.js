@@ -72,6 +72,7 @@ function _via_init() {
   attribute_update_panel_set_active_button();
   annotation_editor_set_active_button();
   init_message_panel();
+  annotation_editor_toggle_all_regions_editor();
 
   // run attached sub-modules (if any)
   // e.g. demo modules

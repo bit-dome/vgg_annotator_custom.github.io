@@ -482,12 +482,17 @@ function toggle_attributes_editor() {
   document.getElementById('attributes_editor_panel_title').classList.toggle('active');
 }
 
-// this vertical spacer is needed to allow scrollbar to show
-// items like Keyboard Shortcut hidden under the attributes panel
+// this spacer is no longer needed for bottom panel; kept for compatibility
 function update_vertical_space() {
   var panel = document.getElementById('vertical_space');
   var aepanel = document.getElementById('annotation_editor_panel');
-  panel.style.height = (aepanel.offsetHeight + 40) + 'px';
+  panel.style.height = '0px';
+  var display_area = document.getElementById('display_area');
+  if ( aepanel.classList.contains('display_block') ) {
+    display_area.style.paddingRight = aepanel.offsetWidth + 'px';
+  } else {
+    display_area.style.paddingRight = '';
+  }
 }
 
 //
@@ -1638,11 +1643,18 @@ function annotation_editor_toggle_all_regions_editor() {
   if ( p.classList.contains('display_block') ) {
     p.classList.remove('display_block');
     _via_annotation_editor_mode = VIA_ANNOTATION_EDITOR_MODE.SINGLE_REGION;
+    update_vertical_space();
   } else {
     _via_annotation_editor_mode = VIA_ANNOTATION_EDITOR_MODE.ALL_REGIONS;
     p.classList.add('display_block');
-    p.style.height = _via_settings.ui.annotation_editor_height + '%';
+    p.style.width = _via_settings.ui.annotation_editor_height + '%';
     p.style.fontSize = _via_settings.ui.annotation_editor_fontsize + 'rem';
+    var topbar = document.getElementById('ui_top_panel');
+    if ( topbar ) {
+      var topH = topbar.offsetHeight;
+      p.style.top = topH + 'px';
+      p.style.height = 'calc(100% - ' + topH + 'px)';
+    }
     annotation_editor_show();
   }
 }
@@ -1678,6 +1690,14 @@ function annotation_editor_update_header_html() {
     rid_col.setAttribute('class', 'col');
     rid_col.innerHTML = '';
     head.appendChild(rid_col);
+
+    // header for delete button column
+    if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE ) {
+      var del_col = document.createElement('span');
+      del_col.setAttribute('class', 'col');
+      del_col.innerHTML = '';
+      head.appendChild(del_col);
+    }
   }
 
   if ( _via_metadata_being_updated === 'file' ) {
@@ -1765,6 +1785,101 @@ function annotation_editor_add_row(row_id) {
   }
 }
 
+function annotation_editor_select_region(region_id) {
+  if ( _via_metadata_being_updated !== 'region' ) {
+    return;
+  }
+  select_only_region(region_id);
+  annotation_editor_clear_row_highlight();
+  annotation_editor_highlight_row(region_id);
+  _via_redraw_reg_canvas();
+  _via_reg_canvas.focus();
+}
+
+function annotation_editor_delete_region(region_id) {
+  select_only_region(region_id);
+  del_sel_regions();
+}
+
+// Compute convex hull (Jarvis march) and optionally reduce to max_pts points
+function _poly_convex_hull(xs, ys) {
+  var n = xs.length;
+  if (n < 3) return { x: xs.slice(), y: ys.slice() };
+
+  // Find leftmost point
+  var start = 0;
+  for (var i = 1; i < n; i++) {
+    if (xs[i] < xs[start] || (xs[i] === xs[start] && ys[i] < ys[start])) start = i;
+  }
+
+  var hull_x = [], hull_y = [];
+  var current = start;
+  do {
+    hull_x.push(xs[current]);
+    hull_y.push(ys[current]);
+    var next = (current + 1) % n;
+    for (var j = 0; j < n; j++) {
+      // Cross product to find most counter-clockwise point
+      var cross = (xs[j] - xs[current]) * (ys[next] - ys[current]) -
+                  (ys[j] - ys[current]) * (xs[next] - xs[current]);
+      if (cross < 0) next = j;
+    }
+    current = next;
+  } while (current !== start && hull_x.length <= n);
+
+  return { x: hull_x, y: hull_y };
+}
+
+// Reduce polygon to at most max_pts by removing points with smallest triangle area
+function _poly_reduce(hull_x, hull_y, max_pts) {
+  var px = hull_x.slice(), py = hull_y.slice();
+  while (px.length > max_pts) {
+    var min_area = Infinity, min_i = 0;
+    for (var i = 0; i < px.length; i++) {
+      var prev = (i - 1 + px.length) % px.length;
+      var next = (i + 1) % px.length;
+      var area = Math.abs(
+        (px[prev] - px[next]) * (py[i] - py[prev]) -
+        (px[prev] - px[i])   * (py[next] - py[prev])
+      );
+      if (area < min_area) { min_area = area; min_i = i; }
+    }
+    px.splice(min_i, 1);
+    py.splice(min_i, 1);
+  }
+  return { x: px, y: py };
+}
+
+function annotation_editor_simplify_poly(region_id) {
+  var img_id = _via_image_id;
+  var region = _via_img_metadata[img_id].regions[region_id];
+  if (!region || region.shape_attributes['name'] !== 'polygon') {
+    alert('Simplify only works on polygon regions.');
+    return;
+  }
+
+  var xs = region.shape_attributes['all_points_x'].slice();
+  var ys = region.shape_attributes['all_points_y'].slice();
+
+  // Step 1: compute convex hull (removes holes / concavities)
+  var hull = _poly_convex_hull(xs, ys);
+
+  // Step 2: reduce to ≤12 points if needed
+  var MAX_PTS = 12;
+  var result = hull.x.length > MAX_PTS
+    ? _poly_reduce(hull.x, hull.y, MAX_PTS)
+    : hull;
+
+  // Update the region
+  region.shape_attributes['all_points_x'] = result.x;
+  region.shape_attributes['all_points_y'] = result.y;
+
+  // Sync canvas regions and redraw
+  _via_load_canvas_regions();
+  _via_redraw_reg_canvas();
+  annotation_editor_update_content();
+}
+
 function annotation_editor_get_metadata_row_html(row_id) {
   var row = document.createElement('div');
   row.setAttribute('class', 'row');
@@ -1780,10 +1895,56 @@ function annotation_editor_get_metadata_row_html(row_id) {
       break;
     case VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE:
       rid.setAttribute('class', 'col id');
+      rid.style.cursor = 'pointer';
+      rid.title = 'Click to select this region';
       rid.innerHTML = (row_id + 1);
+      (function(rid_elem, rid_val) {
+        rid_elem.addEventListener('click', function() {
+          annotation_editor_select_region(rid_val);
+        });
+      })(rid, row_id);
       break;
     }
     row.appendChild(rid);
+
+    // bin (delete) button
+    if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE ) {
+      // simplify poly button (only for polygon regions)
+      var region_shape = _via_img_metadata[_via_image_id].regions[row_id]
+                         && _via_img_metadata[_via_image_id].regions[row_id].shape_attributes['name'];
+      if ( region_shape === 'polygon' ) {
+        var simp_btn = document.createElement('span');
+        simp_btn.setAttribute('class', 'col');
+        simp_btn.style.cursor = 'pointer';
+        simp_btn.style.color = '#0066cc';
+        simp_btn.style.fontWeight = 'bold';
+        simp_btn.style.fontSize = '0.85em';
+        simp_btn.title = 'Simplify polygon to convex hull (\u226412 points)';
+        simp_btn.innerHTML = '🔨';
+        (function(btn, rid_val) {
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            annotation_editor_simplify_poly(rid_val);
+          });
+        })(simp_btn, row_id);
+        row.appendChild(simp_btn);
+      }
+
+      var del_btn = document.createElement('span');
+      del_btn.setAttribute('class', 'col');
+      del_btn.style.cursor = 'pointer';
+      del_btn.style.color = '#cc0000';
+      del_btn.style.fontWeight = 'bold';
+      del_btn.title = 'Delete this region';
+      del_btn.innerHTML = '&#x1F5D1;';
+      (function(btn, rid_val) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          annotation_editor_delete_region(rid_val);
+        });
+      })(del_btn, row_id);
+      row.appendChild(del_btn);
+    }
   }
 
   if ( _via_metadata_being_updated === 'file' ) {
@@ -2479,9 +2640,9 @@ function set_file_annotations_to_default_value(image_id) {
 
 function annotation_editor_increase_panel_height() {
   var p = document.getElementById('annotation_editor_panel');
-  if ( _via_settings.ui.annotation_editor_height < 95 ) {
+  if ( _via_settings.ui.annotation_editor_height < 80 ) {
     _via_settings.ui.annotation_editor_height += VIA_ANNOTATION_EDITOR_HEIGHT_CHANGE;
-    p.style.height = _via_settings.ui.annotation_editor_height + '%';
+    p.style.width = _via_settings.ui.annotation_editor_height + '%';
   }
 }
 
@@ -2489,7 +2650,7 @@ function annotation_editor_decrease_panel_height() {
   var p = document.getElementById('annotation_editor_panel');
   if ( _via_settings.ui.annotation_editor_height > 10 ) {
     _via_settings.ui.annotation_editor_height -= VIA_ANNOTATION_EDITOR_HEIGHT_CHANGE;
-    p.style.height = _via_settings.ui.annotation_editor_height + '%';
+    p.style.width = _via_settings.ui.annotation_editor_height + '%';
   }
 }
 
