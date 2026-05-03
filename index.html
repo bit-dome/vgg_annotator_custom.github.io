@@ -103,6 +103,31 @@ textarea { border:1px solid #cccccc; margin:0.6rem 0; padding:0.2rem 0.4rem; }
 #image_panel canvas { position:absolute; top:0px; left:0px; outline:none;}
 #image_panel .visible { visibility:visible !important; opacity:1 !important; }
 #image_panel label>img { visibility:visible; opacity:1; position:relative; width:auto; height:4em; outline:none; }
+/* Mask canvas sits between image and region canvas */
+#mask_canvas { pointer-events:none; z-index:5; }
+#region_canvas { z-index:10; }
+
+/* Mode indicator in toolbar */
+#via_mode_indicator { display:inline-block; margin-left:1.5rem; padding:0.15rem 0.6rem; font-size:0.85rem; border:1px solid #888; border-radius:3px; cursor:pointer; background:#f7f7f7; user-select:none; vertical-align:middle; }
+#via_mode_indicator:hover { background:#e0e0e0; }
+
+/* Mask controls panel fixed at bottom-center */
+#mask_controls {
+  display:none; position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+  background:rgba(30,30,30,0.92); color:#eee; padding:8px 14px; border-radius:8px 8px 0 0;
+  z-index:1000; flex-direction:row; align-items:center; gap:10px; flex-wrap:wrap;
+  font-size:0.8rem; max-width:98vw;
+}
+#mask_controls label { margin:0 2px; }
+#mask_controls input[type=range] { width:80px; vertical-align:middle; }
+#mask_controls input[type=number] { width:46px; vertical-align:middle; }
+#mask_controls button { padding:3px 8px; cursor:pointer; border:1px solid #888; border-radius:3px; background:#444; color:#eee; font-size:0.8rem; }
+#mask_controls button:hover { background:#666; }
+#mask_brush_preview { display:inline-block; width:18px; height:18px; border-radius:50%; border:2px solid #fff; vertical-align:middle; }
+.mask_palette_swatch { display:inline-block; width:18px; height:18px; border-radius:3px; border:2px solid transparent; cursor:pointer; margin:1px; vertical-align:middle; }
+.mask_palette_swatch.active { border-color:#fff; box-shadow:0 0 0 1px #000; }
+.mask_palette_swatch:hover { border-color:#aaa; }
+#mask_controls .mask_section { display:flex; align-items:center; gap:4px; }
 
 /* image buffer
 #image_panel .fadein { visibility:visible; opacity:1; transition: visibility 0s linear 0s, opacity 300ms; }
@@ -509,6 +534,9 @@ ul.region_shape .selected { fill:#ffffff; stroke:#ff0000; }
         <svg onclick="zoom_in()" style="margin-left:1rem;" viewbox="0 0 24 24"><use xlink:href="#icon_zoomin"></use><title>Zoom In</title></svg>
         <svg onclick="zoom_out()" viewbox="0 0 24 24"><use xlink:href="#icon_zoomout"></use><title>Zoom Out</title></svg>
 
+        <span id="via_mode_indicator" onclick="mask_mode_toggle()" title="Click to toggle between Region and Mask annotation mode">📷 Region Annotation</span>
+        <span class="button" onclick="sel_local_mask_files()" style="margin-left:0.5rem;" title="Load mask PNG files for images (matched by filename)">Add Masks</span>
+
         <svg onclick="sel_all_regions()" viewbox="0 0 24 24" style="margin-left:1rem;"><use xlink:href="#icon_selectall"></use><title>Select All Regions</title></svg>
         <svg onclick="copy_sel_regions()" viewbox="0 0 24 24"><use xlink:href="#icon_copy"></use><title>Copy Regions</title></svg>
         <svg onclick="paste_sel_regions_in_current_image()" viewbox="0 0 24 24"><use xlink:href="#icon_paste"></use><title>Paste Regions</title></svg>
@@ -611,6 +639,9 @@ ul.region_shape .selected { fill:#ffffff; stroke:#ff0000; }
       <div id="display_area">
         <div id="image_panel" class="display_area_content display_none">
           <!-- buffer images using <img> element will be added here -->
+
+          <!-- Mask canvas: painted layer between image and region canvas -->
+          <canvas id="mask_canvas" width="1" height="1"></canvas>
 
           <!-- @todo: in future versions, this canvas will be replaced by a <svg> element -->
             <canvas id="region_canvas" width="1" height="1" tabindex="1">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
@@ -911,6 +942,56 @@ POSSIBILITY OF SUCH DAMAGE.
     <script src="js/via_ui.js"></script>
     <script src="js/via_canvas.js"></script>
     <script src="js/via_handlers.js"></script>
+    <script src="js/via_mask.js"></script>
+
+    <!-- Mask Annotation Controls Panel (fixed at bottom-center, shown in mask mode) -->
+    <div id="mask_controls">
+      <!-- Opacity -->
+      <div class="mask_section">
+        <label>Opacity:</label>
+        <input type="range" id="mask_opacity_slider" min="0" max="100" value="50" oninput="mask_update_opacity()">
+        <span id="mask_opacity_value">50%</span>
+      </div>
+      <!-- Brush size -->
+      <div class="mask_section">
+        <label>Brush:</label>
+        <span id="mask_brush_size_label">20px</span>
+        <button onclick="mask_brush_size_change(-2)" title="Smaller brush (Q)">-</button>
+        <button onclick="mask_brush_size_change(2)" title="Bigger brush (E)">+</button>
+      </div>
+      <!-- Color preview -->
+      <div class="mask_section">
+        <span id="mask_brush_preview" title="Current brush color"></span>
+      </div>
+      <!-- R/G/B sliders -->
+      <div class="mask_section">
+        <label style="color:#f88;">R:</label>
+        <input type="range" id="mask_r_slider" min="0" max="255" value="255" oninput="mask_update_brush_r(this.value)">
+        <input type="number" id="mask_r_num" min="0" max="255" value="255" oninput="mask_update_brush_r(this.value)">
+      </div>
+      <div class="mask_section">
+        <label style="color:#8f8;">G:</label>
+        <input type="range" id="mask_g_slider" min="0" max="255" value="0" oninput="mask_update_brush_g(this.value)">
+        <input type="number" id="mask_g_num" min="0" max="255" value="0" oninput="mask_update_brush_g(this.value)">
+      </div>
+      <div class="mask_section">
+        <label style="color:#88f;">B:</label>
+        <input type="range" id="mask_b_slider" min="0" max="255" value="0" oninput="mask_update_brush_b(this.value)">
+        <input type="number" id="mask_b_num" min="0" max="255" value="0" oninput="mask_update_brush_b(this.value)">
+      </div>
+      <!-- Color palette -->
+      <div class="mask_section">
+        <label>Palette:</label>
+        <div id="mask_palette_swatches" style="display:inline-flex; flex-wrap:wrap; max-width:120px;"></div>
+        <button onclick="mask_palette_add_current()" title="Add current color to palette">+Color</button>
+      </div>
+      <!-- Actions -->
+      <div class="mask_section">
+        <button onclick="mask_save_current_explicit()" title="Save mask for current image">Save Mask</button>
+        <button onclick="mask_save_all()" title="Save all masks">Save All</button>
+        <button onclick="mask_clear_current()" title="Clear mask for current image" style="color:#f88;">Clear</button>
+      </div>
+    </div>
   </body>
 </html>
 </html>

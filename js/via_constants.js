@@ -159,3 +159,25 @@ var annotation_list_snippet = document.getElementById("annotation_list_snippet")
 var annotation_textarea     = document.getElementById("annotation_textarea");
 var img_fn_list_panel     = document.getElementById('img_fn_list_panel');
 var img_fn_list           = document.getElementById('img_fn_list');
+
+// ---- Mask Annotation Globals ----
+var _via_mask_mode                  = false;
+var _via_mask_data                  = {};    // img_id → ImageData (at original image dimensions)
+var _via_mask_filehandle            = {};    // img_id → FileSystemFileHandle
+var _via_mask_brush_size            = 20;
+var _via_mask_brush_r               = 255;
+var _via_mask_brush_g               = 0;
+var _via_mask_brush_b               = 0;
+var _via_mask_brush_a               = 255;
+var _via_mask_opacity               = 0.5;
+var _via_mask_is_painting           = false;
+var _via_mask_ctx                   = null;
+var _via_mask_canvas                = null;
+var _via_mask_prev_x                = -1;
+var _via_mask_prev_y                = -1;
+var _via_mask_cursor_x              = -1;
+var _via_mask_cursor_y              = -1;
+var _via_mask_palette               = [{r:0,g:0,b:0},{r:255,g:255,b:255}]; // black, white
+var _via_mask_palette_active_index  = 0;
+var _via_mask_fsa_supported         = (typeof showOpenFilePicker !== 'undefined');
+var _via_mask_dir_handle            = null; // FileSystemDirectoryHandle — set once, enables silent saves

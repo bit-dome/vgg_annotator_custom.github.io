@@ -59,6 +59,11 @@ function _via_init() {
   // initialize region canvas 2D context
   _via_init_reg_canvas_context();
 
+  // initialize mask annotation module
+  if (typeof mask_init === 'function') {
+    mask_init();
+  }
+
   // initialize user input handlers (for both window and via_reg_canvas)
   // handles drawing of regions by user over the image
   _via_init_keyboard_handlers();
@@ -102,6 +107,7 @@ function _via_init_mouse_handlers() {
   _via_reg_canvas.addEventListener('mouseup', _via_reg_canvas_mouseup_handler, false);
   _via_reg_canvas.addEventListener('mouseover', _via_reg_canvas_mouseover_handler, false);
   _via_reg_canvas.addEventListener('mousemove', _via_reg_canvas_mousemove_handler, false);
+  _via_reg_canvas.addEventListener('mouseleave', function(e) { if (_via_mask_mode) mask_canvas_mouseleave(e); }, false);
   _via_reg_canvas.addEventListener('wheel', _via_reg_canvas_mouse_wheel_listener, false);
   // touch screen event handlers
   // @todo: adapt for mobile users

@@ -295,6 +295,7 @@ function _via_reg_canvas_dblclick_handler(e) {
 
 // user clicks on the canvas
 function _via_reg_canvas_mousedown_handler(e) {
+  if (_via_mask_mode) { mask_canvas_mousedown(e); return; }
   e.stopPropagation();
   var normalized_position = _via_get_normalized_event_position(e);
   _via_click_x0 = normalized_position.x; _via_click_y0 = normalized_position.y;
@@ -399,6 +400,7 @@ function _via_reg_canvas_mousedown_handler(e) {
 //  - new region drawing (including polygon)
 //  - moving/resizing/select/unselect existing region
 function _via_reg_canvas_mouseup_handler(e) {
+  if (_via_mask_mode) { mask_canvas_mouseup(e); return; }
   e.stopPropagation();
   var normalized_position = _via_get_normalized_event_position(e);
   _via_click_x1 = normalized_position.x; _via_click_y1 = normalized_position.y;
@@ -970,6 +972,7 @@ function _via_reg_canvas_mouseover_handler(e) {
 }
 
 function _via_reg_canvas_mousemove_handler(e) {
+  if (_via_mask_mode) { mask_canvas_mousemove(e); return; }
   if ( !_via_current_image_loaded ) {
     return;
   }

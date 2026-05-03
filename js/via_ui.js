@@ -92,6 +92,13 @@ function _via_reg_canvas_mouse_wheel_listener(e) {
     return;
   }
 
+  if (_via_mask_mode) {
+    // Scroll up = bigger brush, scroll down = smaller brush
+    mask_brush_size_change(e.deltaY < 0 ? 2 : -2);
+    e.preventDefault();
+    return;
+  }
+
   if ( e.ctrlKey ) {
     // perform zoom
     if (e.deltaY < 0) {
@@ -4694,6 +4701,14 @@ function _via_buffer_hide_current_image() {
 
 function _via_show_img_from_buffer(img_index) {
   return new Promise( function(ok_callback, err_callback) {
+    // Auto-save mask when switching to a different image
+    // Note: _via_current_image_loaded is already set to false before this function
+    // is called, so we check _via_image_id directly instead.
+    if (_via_mask_mode && _via_image_id &&
+        _via_image_id !== _via_image_id_list[img_index]) {
+      mask_autosave_current(_via_image_id);
+    }
+
     _via_buffer_hide_current_image();
 
     var cimg_html_id = _via_img_buffer_get_html_id(img_index);
@@ -4780,6 +4795,12 @@ function _via_show_img_from_buffer(img_index) {
     _via_load_canvas_regions(); // image to canvas space transform
     _via_redraw_reg_canvas();
     _via_reg_canvas.focus();
+
+    // Restore mask for the newly shown image
+    if (typeof mask_restore_for_image === 'function') {
+      mask_resize_canvas();
+      mask_restore_for_image(_via_image_id);
+    }
 
     // Preserve zoom level
     if (_via_is_canvas_zoomed) {
